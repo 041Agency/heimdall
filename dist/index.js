@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.configure = void 0;
+exports.checkInputFast = checkInputFast;
+exports.checkInputModeration = checkInputModeration;
 exports.checkInput = checkInput;
 exports.checkOutput = checkOutput;
 const config_1 = require("./config");
@@ -16,6 +18,31 @@ function log(cfg, stage, guardType, reason, preview) {
         reason,
         preview,
     });
+}
+function checkInputFast(text) {
+    const cfg = (0, config_1.getConfig)();
+    const secretsResult = (0, secrets_1.checkSecrets)(text);
+    const injectionResult = (0, injection_1.checkInjection)(text);
+    const blocked = secretsResult.flagged
+        ? { type: 'secrets', reason: secretsResult.reason }
+        : injectionResult.flagged
+            ? { type: 'injection', reason: injectionResult.reason }
+            : null;
+    if (blocked) {
+        log(cfg, 'input', blocked.type, blocked.reason, text.slice(0, 200));
+        return { blocked: true, reason: INPUT_REFUSAL };
+    }
+    return { blocked: false };
+}
+async function checkInputModeration(text) {
+    const cfg = (0, config_1.getConfig)();
+    const modResult = await (0, moderation_1.checkModeration)(text, cfg.moderationApiKey)
+        .catch(() => ({ flagged: false, reason: undefined }));
+    if (modResult.flagged) {
+        log(cfg, 'input', 'moderation', modResult.reason, text.slice(0, 200));
+        return { blocked: true, reason: INPUT_REFUSAL };
+    }
+    return { blocked: false };
 }
 async function checkInput(text) {
     const cfg = (0, config_1.getConfig)();

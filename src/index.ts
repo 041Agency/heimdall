@@ -19,6 +19,40 @@ function log(cfg: HeimdallConfig, stage: string, guardType: string, reason?: str
   });
 }
 
+export function checkInputFast(text: string): HeimdallResult {
+  const cfg = getConfig();
+
+  const secretsResult = checkSecrets(text);
+  const injectionResult = checkInjection(text);
+
+  const blocked = secretsResult.flagged
+    ? { type: 'secrets' as const, reason: secretsResult.reason }
+    : injectionResult.flagged
+      ? { type: 'injection' as const, reason: injectionResult.reason }
+      : null;
+
+  if (blocked) {
+    log(cfg, 'input', blocked.type, blocked.reason, text.slice(0, 200));
+    return { blocked: true, reason: INPUT_REFUSAL };
+  }
+
+  return { blocked: false };
+}
+
+export async function checkInputModeration(text: string): Promise<HeimdallResult> {
+  const cfg = getConfig();
+
+  const modResult = await checkModeration(text, cfg.moderationApiKey)
+    .catch(() => ({ flagged: false, reason: undefined }));
+
+  if (modResult.flagged) {
+    log(cfg, 'input', 'moderation', modResult.reason, text.slice(0, 200));
+    return { blocked: true, reason: INPUT_REFUSAL };
+  }
+
+  return { blocked: false };
+}
+
 export async function checkInput(text: string): Promise<HeimdallResult> {
   const cfg = getConfig();
   const apiKey = cfg.moderationApiKey;
