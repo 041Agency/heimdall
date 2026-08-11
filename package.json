@@ -1,0 +1,34 @@
+{
+  "name": "@fundr/heimdall",
+  "version": "0.1.0",
+  "description": "Lightweight LLM guardrails — content moderation, secret detection, and prompt injection protection. Zero runtime dependencies.",
+  "license": "MIT",
+  "author": "Fundr",
+  "keywords": [
+    "llm",
+    "guardrails",
+    "content-moderation",
+    "prompt-injection",
+    "safety",
+    "ai-safety",
+    "secrets-detection",
+    "heimdall"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
