@@ -1,0 +1,59 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.configure = void 0;
+exports.checkInput = checkInput;
+exports.checkOutput = checkOutput;
+const config_1 = require("./config");
+Object.defineProperty(exports, "configure", { enumerable: true, get: function () { return config_1.configure; } });
+const moderation_1 = require("./moderation");
+const secrets_1 = require("./secrets");
+const injection_1 = require("./injection");
+const INPUT_REFUSAL = "I'm not able to help with that message. Is there something fund-related I can assist with?";
+const OUTPUT_REFUSAL = "I'm here to help with your Fundr workflows. Could you rephrase what you're looking for?";
+function log(cfg, stage, guardType, reason, preview) {
+    cfg.logger?.warn('[heimdall] ' + stage + ' blocked', {
+        guardType,
+        reason,
+        preview,
+    });
+}
+async function checkInput(text) {
+    const cfg = (0, config_1.getConfig)();
+    const apiKey = cfg.moderationApiKey;
+    const [modResult, secretsResult, injectionResult] = await Promise.all([
+        (0, moderation_1.checkModeration)(text, apiKey).catch(() => ({ flagged: false, reason: undefined })),
+        Promise.resolve((0, secrets_1.checkSecrets)(text)),
+        Promise.resolve((0, injection_1.checkInjection)(text)),
+    ]);
+    const blocked = modResult.flagged
+        ? { type: 'moderation', reason: modResult.reason }
+        : secretsResult.flagged
+            ? { type: 'secrets', reason: secretsResult.reason }
+            : injectionResult.flagged
+                ? { type: 'injection', reason: injectionResult.reason }
+                : null;
+    if (blocked) {
+        log(cfg, 'input', blocked.type, blocked.reason, text.slice(0, 200));
+        return { blocked: true, reason: INPUT_REFUSAL };
+    }
+    return { blocked: false };
+}
+async function checkOutput(text) {
+    const cfg = (0, config_1.getConfig)();
+    const apiKey = cfg.moderationApiKey;
+    const [modResult, secretsResult] = await Promise.all([
+        (0, moderation_1.checkModeration)(text, apiKey).catch(() => ({ flagged: false, reason: undefined })),
+        Promise.resolve((0, secrets_1.checkSecrets)(text)),
+    ]);
+    const blocked = modResult.flagged
+        ? { type: 'moderation', reason: modResult.reason }
+        : secretsResult.flagged
+            ? { type: 'secrets', reason: secretsResult.reason }
+            : null;
+    if (blocked) {
+        log(cfg, 'output', blocked.type, blocked.reason, text.slice(0, 200));
+        return { blocked: true, reason: OUTPUT_REFUSAL };
+    }
+    return { blocked: false };
+}
+//# sourceMappingURL=index.js.map
