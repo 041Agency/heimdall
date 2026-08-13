@@ -10,8 +10,8 @@ Object.defineProperty(exports, "configure", { enumerable: true, get: function ()
 const moderation_1 = require("./moderation");
 const secrets_1 = require("./secrets");
 const injection_1 = require("./injection");
-const INPUT_REFUSAL = "I'm not able to help with that message. Is there something fund-related I can assist with?";
-const OUTPUT_REFUSAL = "I'm here to help with your Fundr workflows. Could you rephrase what you're looking for?";
+const INPUT_REFUSAL = "I'm not able to help with that message. Could you rephrase what you're looking for?";
+const OUTPUT_REFUSAL = "I'm unable to respond to that request. Could you try asking in a different way?";
 function log(cfg, stage, guardType, reason, preview) {
     cfg.logger?.warn('[heimdall] ' + stage + ' blocked', {
         guardType,

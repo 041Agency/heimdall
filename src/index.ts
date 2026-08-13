@@ -6,10 +6,10 @@ import { checkInjection } from './injection';
 export type { HeimdallConfig, HeimdallLogger, HeimdallResult };
 
 const INPUT_REFUSAL =
-  "I'm not able to help with that message. Is there something fund-related I can assist with?";
+  "I'm not able to help with that message. Could you rephrase what you're looking for?";
 
 const OUTPUT_REFUSAL =
-  "I'm here to help with your Fundr workflows. Could you rephrase what you're looking for?";
+  "I'm unable to respond to that request. Could you try asking in a different way?";
 
 function log(cfg: HeimdallConfig, stage: string, guardType: string, reason?: string, preview?: string): void {
   cfg.logger?.warn('[heimdall] ' + stage + ' blocked', {
