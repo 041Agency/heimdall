@@ -2,11 +2,11 @@
 
 Lightweight, zero-dependency LLM guardrails for Node.js. Three layers of defense:
 
-- **Content moderation** — OpenAI Moderation API (free, no token cost)
-- **Secret detection** — AWS keys, GitHub tokens, credit cards, SSNs, JWT tokens, and more
-- **Prompt injection detection** — Jailbreak attempts, system prompt extraction, role overrides
+- **Content moderation** :  OpenAI Moderation API (free, no token cost)
+- **Secret detection** :  AWS keys, GitHub tokens, credit cards, SSNs, JWT tokens, and more
+- **Prompt injection detection** :  Jailbreak attempts, system prompt extraction, role overrides
 
-All checks fail open. No API key is required — without one, the moderation layer silently skips.
+All checks fail open. No API key is required :  without one, the moderation layer silently skips.
 
 ## Install
 
@@ -21,7 +21,7 @@ import { configure, checkInput, checkOutput } from '@fundr/heimdall';
 
 configure({
   moderationApiKey: process.env.OPENAI_API_KEY, // optional
-  logger: console, // optional — pass any object with a .warn() method
+  logger: console, // optional :  pass any object with a .warn() method
 });
 
 // Before sending a user message to your LLM
@@ -58,13 +58,13 @@ Checks: moderation → secrets → injection. First match blocks.
 
 Run moderation and secret checks against LLM output. Returns `{ blocked: boolean, reason?: string }`.
 
-Prompt injection is skipped on output — it only makes sense for user input.
+Prompt injection is skipped on output :  it only makes sense for user input.
 
 ## Layers
 
 ### Content Moderation
 
-Uses the [OpenAI Moderation API](https://platform.openai.com/docs/guides/moderation) to detect hate speech, threats, violence, self-harm, and sexual content across 11 categories. Free — no token cost. Requires `moderationApiKey` to be configured.
+Uses the [OpenAI Moderation API](https://platform.openai.com/docs/guides/moderation) to detect hate speech, threats, violence, self-harm, and sexual content across 11 categories. Free :  no token cost. Requires `moderationApiKey` to be configured.
 
 ### Secret Detection
 
@@ -93,7 +93,7 @@ Regex-based detection of jailbreak and manipulation attempts:
 
 - **Zero runtime dependencies.** Only TypeScript as a dev dependency.
 - **Fails open.** If the moderation API is unreachable, checks skip rather than blocking legitimate traffic.
-- **No PII redaction of business data.** Names, emails, and phone numbers are not flagged — Heimdall is designed for applications where users legitimately work with contact data.
+- **No PII redaction of business data.** Names, emails, and phone numbers are not flagged :  Heimdall is designed for applications where users legitimately work with contact data.
 - **Optional logging.** Pass a logger to `configure()` if you want visibility into blocked content.
 
 ## License
