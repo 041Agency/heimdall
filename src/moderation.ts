@@ -1,3 +1,5 @@
+import type { Finding } from './config';
+
 const MODERATION_URL = 'https://api.openai.com/v1/moderations';
 
 const HARMFUL_CATEGORIES = [
@@ -14,7 +16,7 @@ const HARMFUL_CATEGORIES = [
   'violence/graphic',
 ] as const;
 
-interface ModerationResult {
+interface ModerationResponse {
   flagged: boolean;
   categories: Record<string, boolean>;
 }
@@ -22,12 +24,23 @@ interface ModerationResult {
 export interface ModerationCheckResult {
   flagged: boolean;
   reason?: string;
+  findings: Finding[];
 }
 
-export async function checkModeration(text: string, apiKey?: string): Promise<ModerationCheckResult> {
-  if (!apiKey) {
-    return { flagged: false };
-  }
+/**
+ * OpenAI's moderation endpoint. It is free (no token cost) but requires a
+ * platform API key; without one the layer is skipped and reports nothing.
+ * Fails open: a network error is not a block.
+ *
+ * Note the categories are harm categories aimed at user-generated chat. They
+ * carry no signal about whether a document is relevant or good, so this layer
+ * is not a fit-ranking tool.
+ */
+export async function checkModeration(
+  text: string,
+  apiKey?: string,
+): Promise<ModerationCheckResult> {
+  if (!apiKey) return { flagged: false, findings: [] };
 
   try {
     const res = await fetch(MODERATION_URL, {
@@ -39,26 +52,29 @@ export async function checkModeration(text: string, apiKey?: string): Promise<Mo
       body: JSON.stringify({ input: text }),
     });
 
-    if (!res.ok) {
-      return { flagged: false };
-    }
+    if (!res.ok) return { flagged: false, findings: [] };
 
-    const data = (await res.json()) as { results: ModerationResult[] };
+    const data = (await res.json()) as { results: ModerationResponse[] };
     const result = data.results?.[0];
-    if (!result?.flagged) {
-      return { flagged: false };
-    }
+    if (!result?.flagged) return { flagged: false, findings: [] };
 
     const triggered = HARMFUL_CATEGORIES.filter((cat) => result.categories[cat]);
-    if (triggered.length === 0) {
-      return { flagged: false };
-    }
+    if (triggered.length === 0) return { flagged: false, findings: [] };
 
+    const reason = `Content flagged for: ${triggered.join(', ')}`;
     return {
       flagged: true,
-      reason: `Content flagged for: ${triggered.join(', ')}`,
+      reason,
+      findings: [
+        {
+          layer: 'moderation',
+          guard: 'OpenAI moderation',
+          confidence: 'high',
+          reason,
+        },
+      ],
     };
   } catch {
-    return { flagged: false };
+    return { flagged: false, findings: [] };
   }
 }
